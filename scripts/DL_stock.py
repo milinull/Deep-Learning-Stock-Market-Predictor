@@ -135,7 +135,7 @@ test_predictions = scaler.inverse_transform(test_predictions)
 y_test_rescaled = scaler.inverse_transform(y_test.reshape(-1, 1))
 
 # Obter os últimos time_step de valores dos dados originais para previsão futura
-last_sequence = data[-time_step:]  # Últimos 60 valores normalizados
+last_sequence = data[-time_step:]  # Últimos 22 valores normalizados
 
 # Fazer previsões futuras
 print(f"Gerando previsões para os próximos {forecast_days} dias úteis...")
