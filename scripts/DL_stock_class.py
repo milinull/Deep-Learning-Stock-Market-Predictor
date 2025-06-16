@@ -66,8 +66,10 @@ class DlModel:
     def __init__(self):
         self.class_manager = StockData()
         self.model = None
-        self.x_train, self.y_train = None
-        self.x_test, self.y_test = None
+        self.x_train = None
+        self.y_train = None
+        self.x_test = None
+        self.y_test = None
 
         # Processar o dataframe diretamente
         self.data, self.scaler = self.class_manager.prepare_data()
