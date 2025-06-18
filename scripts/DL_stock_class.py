@@ -135,11 +135,11 @@ class LSTMModel:
         self.model.save(filename)
         print(f"Modelo salvo como {filename}")
 
-    def load_model(self, filename='lstm_model.h5'):
+'''    def load_model(self, filename='lstm_model.h5'):
         """Carrega um modelo salvo"""
         self.model = load_model(filename)
         print(f"Modelo {filename} carregado com sucesso.")
-
+'''
 class StockPredictor:
     def __init__(self, stock='MSFT', period='24mo', forecast_days=22):
         self.stock_data = StockData(stock, period)
