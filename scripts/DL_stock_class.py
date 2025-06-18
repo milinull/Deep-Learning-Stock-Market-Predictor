@@ -3,7 +3,6 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential  # type: ignore
 from tensorflow.keras.layers import LSTM, Dense # type: ignore
 import yfinance as yf
-import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import timedelta
 
