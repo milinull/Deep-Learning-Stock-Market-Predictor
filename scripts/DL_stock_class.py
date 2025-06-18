@@ -8,34 +8,33 @@ import pandas as pd
 from datetime import timedelta
 
 class StockData:
-    def __init__(self):
-        self.stock = 'MSFT'
-        self.period = '24mo'
-        self.data = None
+    def __init__(self, stock='MSFT', period='24mo'):
+        self.stock = stock
+        self.period = period
+        self.raw_data = None  # DataFrame original
+        self.scaled_data = None
         self.scaler = None
 
-    def prepare_data(self):
-        print("Baixando dados da MSFT...")
-        df = yf.download([self.stock], period=self.period)
-        self.data, self.scaler = self.load_data_from_df(df)
+    def download_and_prepare_data(self):
+        """Download e prepara os dados para o modelo"""
+        print(f"Baixando dados da {self.stock}...")
+        self.raw_data = yf.download([self.stock], period=self.period)
+        self.scaled_data, self.scaler = self._load_data_from_df(self.raw_data)
+        return self.scaled_data, self.scaler, self.raw_data
 
-        return self.data, self.scaler
-
-    def load_data_from_df(self, df):
-        # Garante que a coluna 'Close' existe
+    def _load_data_from_df(self, df):
+        """Processa o DataFrame e normaliza os dados"""
         if 'Close' not in df.columns:
             raise ValueError("Coluna 'Close' não encontrada no DataFrame.")
 
-        # Converte a coluna 'Close' para float e remove valores nulos
         close_prices = df['Close'].dropna().astype(float).values.reshape(-1, 1)
-
-        # Normaliza os dados
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaled_data = scaler.fit_transform(close_prices)
 
         return scaled_data, scaler
     
     def create_dataset(self, data, time_step):
+        """Cria dataset para treinamento/teste"""
         x, y = [], []
         for i in range(len(data) - time_step - 1):
             x.append(data[i:(i + time_step), 0])
@@ -43,97 +42,140 @@ class StockData:
         return np.array(x), np.array(y)
     
     def create_future_dates(self, last_date, days_ahead=22):
-        """
-        Cria datas futuras considerando apenas dias úteis
-        """
-
-        # ENTRADA: Data (última data conhecida)
-        # SAÍDA: Lista de datas (próximos dias úteis)
-
-
-        future_dates = []   # Lista de DATAS [2025-06-12, 2025-06-13, 2025-06-16, ...]
+        """Cria datas futuras considerando apenas dias úteis"""
+        future_dates = []
         current_date = last_date + timedelta(days=1)
         
         while len(future_dates) < days_ahead:
-            # Adiciona apenas dias úteis (segunda a sexta)
-            if current_date.weekday() < 5:
+            if current_date.weekday() < 5:  # Segunda a sexta
                 future_dates.append(current_date)
             current_date += timedelta(days=1)
         
         return future_dates
 
-class DlModel:
-    def __init__(self):
-        self.class_manager = StockData()
+class LSTMModel:
+    def __init__(self, time_step=22, epochs=100, batch_size=32):
+        self.time_step = time_step
+        self.epochs = epochs
+        self.batch_size = batch_size
         self.model = None
-        self.x_train, self.y_train = None
-        self.x_test, self.y_test = None
+        self.history = None
+        
+        # Dados de treino/teste
+        self.x_train = None
+        self.y_train = None
+        self.x_test = None
+        self.y_test = None
 
-        # Processar o dataframe diretamente
-        self.data, self.scaler = self.class_manager.prepare_data()
-        self.time_step = 22  # Number of time steps to look back
+    def prepare_train_test_data(self, data, stock_data_manager):
+        """Prepara dados de treino e teste"""
+        train_size = int(len(data) * 0.8)
+        train_data = data[0:train_size, :]
+        test_data = data[train_size - self.time_step:, :]
 
-    def train(self):
-        # Create train and test sets
-        train_size = int(len(self.data) * 0.8)
-        train_data = self.data[0:train_size, :]
-        test_data = self.data[train_size - self.time_step:, :]
+        self.x_train, self.y_train = stock_data_manager.create_dataset(train_data, self.time_step)
+        self.x_test, self.y_test = stock_data_manager.create_dataset(test_data, self.time_step)
 
-        self.x_train, self.y_train = self.class_manager.create_dataset(train_data, self.time_step)
-        self.x_test, self.y_test = self.class_manager.create_dataset(test_data, self.time_step)
-
-        self.reshape()
-
-    def reshape(self):
-        # Reshape input to be [samples, time steps, features]
+        # Reshape para LSTM
         self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], self.x_train.shape[1], 1))
         self.x_test = np.reshape(self.x_test, (self.x_test.shape[0], self.x_test.shape[1], 1))
 
-    def build_lstm_model(self):
-        # Build LSTM model
+    def build_model(self):
+        """Constrói o modelo LSTM"""
         print("Construindo modelo LSTM...")
         self.model = Sequential()
-        self.model.add(LSTM(units=50, return_sequences=True, input_shape=(self.x_train.shape[1], 1)))
+        self.model.add(LSTM(units=50, return_sequences=True, input_shape=(self.time_step, 1)))
         self.model.add(LSTM(units=50, return_sequences=False))
         self.model.add(Dense(units=25))
         self.model.add(Dense(units=1))
-
-        # Compile the model
+        
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
-    def predict_future(model, scaler, last_sequence, days_ahead=22):
-        """
-        Função para fazer previsões futuras usando o modelo treinado
+    def train_model(self):
+        """Treina o modelo"""
+        if self.model is None:
+            raise ValueError("Modelo não foi construído. Chame build_model() primeiro.")
         
-        Args:
-            model: Modelo LSTM treinado
-            scaler: Scaler usado para normalização
-            last_sequence: Últimos 'time_step' valores para iniciar a previsão
-            days_ahead: Número de dias para prever (default: 22 dias úteis = ~1 mês)
+        print("Treinando modelo...")
+        self.history = self.model.fit(
+            self.x_train, self.y_train, 
+            epochs=self.epochs, 
+            batch_size=self.batch_size, 
+            verbose=1
+        )
+
+    def predict_test_data(self, scaler):
+        """Faz previsões no conjunto de teste"""
+        print("Fazendo previsões no conjunto de teste...")
+        test_predictions = self.model.predict(self.x_test)
+        test_predictions = scaler.inverse_transform(test_predictions)
+        y_test_rescaled = scaler.inverse_transform(self.y_test.reshape(-1, 1))
         
-        Returns:
-            Array com as previsões desnormalizadas
-        """
+        return test_predictions, y_test_rescaled
 
-        # ENTRADA: Números (preços dos últimos 22 dias)
-        # SAÍDA: Números (previsões de preços futuros)
-
-        predictions = []    # Lista de VALORES [462.27, 457.33, 451.00, 444.18, ...]
+    def predict_future(self, scaler, last_sequence, days_ahead=22):
+        """Faz previsões futuras"""
+        predictions = []
         current_sequence = last_sequence.copy()
         
         for _ in range(days_ahead):
-            # Reshape para o formato esperado pelo modelo
             current_input = current_sequence.reshape((1, len(current_sequence), 1))
-            
-            # Fazer previsão
-            next_pred = model.predict(current_input, verbose=0)
+            next_pred = self.model.predict(current_input, verbose=0)
             predictions.append(next_pred[0, 0])
-            
-            # Atualizar a sequência: remove o primeiro valor e adiciona a previsão
             current_sequence = np.append(current_sequence[1:], next_pred[0, 0])
         
-        # Desnormalizar as previsões
         predictions = np.array(predictions).reshape(-1, 1)
         predictions = scaler.inverse_transform(predictions)
         
         return predictions.flatten()
+
+class StockPredictor:
+    def __init__(self, stock='MSFT', period='24mo', forecast_days=22):
+        self.stock_data = StockData(stock, period)
+        self.lstm_model = LSTMModel()
+        self.forecast_days = forecast_days
+        
+        # Dados processados
+        self.scaled_data = None
+        self.scaler = None
+        self.raw_data = None
+
+    def run_prediction(self):
+        """Executa todo o pipeline de previsão"""
+        # 1. Preparar dados
+        self.scaled_data, self.scaler, self.raw_data = self.stock_data.download_and_prepare_data()
+        
+        # 2. Preparar dados de treino/teste
+        self.lstm_model.prepare_train_test_data(self.scaled_data, self.stock_data)
+        
+        # 3. Construir e treinar modelo
+        self.lstm_model.build_model()
+        self.lstm_model.train_model()
+        
+        # 4. Fazer previsões no teste
+        test_predictions, y_test = self.lstm_model.predict_test_data(self.scaler)
+        
+        # 5. Fazer previsões futuras
+        last_sequence = self.scaled_data[-self.lstm_model.time_step:].flatten()
+        future_predictions = self.lstm_model.predict_future(
+            self.scaler, last_sequence, self.forecast_days
+        )
+        
+        # 6. Criar DataFrame com previsões futuras
+        last_date = self.raw_data.index[-1].date()
+        future_dates = self.stock_data.create_future_dates(last_date, self.forecast_days)
+        
+        future_df = pd.DataFrame({
+            'Data': future_dates,
+            'Previsao_Close': future_predictions
+        })
+        
+        print(f"\nPrevisões para os próximos {self.forecast_days} dias úteis:")
+        print(future_df.to_string(index=False))
+        
+        return future_df, test_predictions, y_test
+
+# Uso da classe
+if __name__ == "__main__":
+    predictor = StockPredictor(stock='MSFT', period='24mo', forecast_days=22)
+    future_predictions, test_predictions, y_test = predictor.run_prediction()
