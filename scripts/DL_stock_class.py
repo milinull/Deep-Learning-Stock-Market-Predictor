@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential  # type: ignore
-from tensorflow.keras.layers import LSTM, Dense # type: ignore
+from tensorflow.keras.models import Sequential, load_model  # type: ignore
+from tensorflow.keras.layers import LSTM, Dense             # type: ignore
 import yfinance as yf
 import pandas as pd
 from datetime import timedelta
@@ -127,13 +127,25 @@ class LSTMModel:
         predictions = scaler.inverse_transform(predictions)
         
         return predictions.flatten()
+    
+    def save_model(self, filename='lstm_model.h5'):
+        """Salva o modelo treinado"""
+        if self.model is None:
+            raise ValueError("Modelo não foi treinado ainda.")
+        self.model.save(filename)
+        print(f"Modelo salvo como {filename}")
+
+    def load_model(self, filename='lstm_model.h5'):
+        """Carrega um modelo salvo"""
+        self.model = load_model(filename)
+        print(f"Modelo {filename} carregado com sucesso.")
 
 class StockPredictor:
     def __init__(self, stock='MSFT', period='24mo', forecast_days=22):
         self.stock_data = StockData(stock, period)
         self.lstm_model = LSTMModel()
         self.forecast_days = forecast_days
-        
+
         # Dados processados
         self.scaled_data = None
         self.scaler = None
@@ -143,35 +155,38 @@ class StockPredictor:
         """Executa todo o pipeline de previsão"""
         # 1. Preparar dados
         self.scaled_data, self.scaler, self.raw_data = self.stock_data.download_and_prepare_data()
-        
+
         # 2. Preparar dados de treino/teste
         self.lstm_model.prepare_train_test_data(self.scaled_data, self.stock_data)
-        
+
         # 3. Construir e treinar modelo
         self.lstm_model.build_model()
         self.lstm_model.train_model()
-        
-        # 4. Fazer previsões no teste
+
+        # 4. Salvar o modelo treinado
+        self.lstm_model.save_model('lstm_model.h5')
+
+        # 5. Fazer previsões no teste
         test_predictions, y_test = self.lstm_model.predict_test_data(self.scaler)
-        
-        # 5. Fazer previsões futuras
+
+        # 6. Fazer previsões futuras
         last_sequence = self.scaled_data[-self.lstm_model.time_step:].flatten()
         future_predictions = self.lstm_model.predict_future(
             self.scaler, last_sequence, self.forecast_days
         )
-        
-        # 6. Criar DataFrame com previsões futuras
+
+        # 7. Criar DataFrame com previsões futuras
         last_date = self.raw_data.index[-1].date()
         future_dates = self.stock_data.create_future_dates(last_date, self.forecast_days)
-        
+
         future_df = pd.DataFrame({
             'Data': future_dates,
             'Previsao_Close': future_predictions
         })
-        
+
         print(f"\nPrevisões para os próximos {self.forecast_days} dias úteis:")
         print(future_df.to_string(index=False))
-        
+
         return future_df, test_predictions, y_test
 
 # Uso da classe
