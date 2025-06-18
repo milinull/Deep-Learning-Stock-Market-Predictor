@@ -140,6 +140,7 @@ class LSTMModel:
         self.model = load_model(filename)
         print(f"Modelo {filename} carregado com sucesso.")
 '''
+
 class StockPredictor:
     def __init__(self, stock='MSFT', period='24mo', forecast_days=22):
         self.stock_data = StockData(stock, period)
