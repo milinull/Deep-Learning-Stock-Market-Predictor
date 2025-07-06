@@ -13,36 +13,34 @@ app = FastAPI(
 
 # Configurações
 MAX_PREDICTION_DAYS = 30  # Limite máximo de dias para previsão
-DEFAULT_STOCK = 'MSFT'    # Ação padrão se nenhuma for fornecida
 
 class PredictRequest(BaseModel):
-    stock: Optional[str] = DEFAULT_STOCK  # Nome da ação (opcional)
-    days_ahead: int                       # Número de dias para prever
+    stock: str  # Agora obrigatório, sem valor default
+    days_ahead: int
 
 @app.post("/predict")
 async def predict_prices(request: PredictRequest):
     try:
-        # 1. Validação dos dados de entrada
-        if request.days_ahead <= 0 or request.days_ahead > MAX_PREDICTION_DAYS:
+        # Acessando os dados validados
+        stock = request.stock
+        days = request.days_ahead
+
+        if days <= 0 or days > MAX_PREDICTION_DAYS:
             raise HTTPException(
                 status_code=400,
                 detail=f"O número de dias para previsão deve estar entre 1 e {MAX_PREDICTION_DAYS}"
             )
-        
-        # 2. Inicializa o predictor com a ação desejada
-        predictor = StockPredictor(stock=request.stock)
-        
-        # 3. Executa o pipeline de previsão (isso já baixa os dados e treina o modelo)
+
+        predictor = StockPredictor(stock=stock)
         future_df, _, _ = predictor.run_prediction()
-        
-        # 4. Formata a resposta
-        predictions = [round(float(p), 2) for p in future_df['Previsao_Close']][:request.days_ahead]
-        dates = [str(d) for d in future_df['Data']][:request.days_ahead]
+
+        predictions = [round(float(p), 2) for p in future_df['Previsao_Close']][:days]
+        dates = [str(d) for d in future_df['Data']][:days]
         return {
-            "stock": request.stock,
+            "stock": stock,
             "predictions": predictions,
             "dates": dates,
-            "prediction_days": request.days_ahead,
+            "prediction_days": days,
             "max_prediction_days": MAX_PREDICTION_DAYS
         }
 
