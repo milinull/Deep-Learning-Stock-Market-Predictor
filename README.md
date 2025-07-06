@@ -1,8 +1,59 @@
-# 📈 API de Previsão de Ações
+# 📈 API de Previsão de Ações com Deep Learning (LSTM)
 
-API RESTful para previsão de preços de ações utilizando redes LSTM.
+Este projeto implementa um modelo preditivo utilizando redes neurais LSTM para prever o valor de fechamento de ações da bolsa, com deploy em uma API RESTful desenvolvida em FastAPI.
 
 ---
+
+## 📝 Sumário
+
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Requisitos Atendidos](#requisitos-atendidos)
+- [Como Executar](#como-executar)
+- [Exemplo de Uso da API](#exemplo-de-uso-da-api)
+- [Monitoramento e Escalabilidade](#monitoramento-e-escalabilidade)
+- [Documentação Automática](#documentação-automática)
+- [Extras](#extras)
+
+---
+
+## Sobre o Projeto
+
+Este projeto faz parte do Tech Challenge da Fase 4 e engloba:
+
+- Coleta de dados históricos de ações via Yahoo Finance (`yfinance`)
+- Pré-processamento dos dados para uso em redes neurais
+- Construção, treinamento e avaliação de um modelo LSTM para séries temporais financeiras
+- Salvamento do modelo treinado para inferência
+- Deploy do modelo em uma API RESTful (FastAPI)
+- Documentação e exemplos de uso
+
+---
+
+## Requisitos Atendidos
+
+- **Coleta e Pré-processamento dos Dados:**  
+  Utiliza a biblioteca `yfinance` para baixar dados históricos de qualquer ação suportada pelo Yahoo Finance.  
+  Exemplo:
+  ```python
+  import yfinance as yf
+  df = yf.download('MSFT', start='2018-01-01', end='2024-07-20')
+
+- Desenvolvimento do Modelo LSTM:
+    - Implementação de rede neural LSTM para previsão de séries temporais.
+    - Treinamento e ajuste de hiperparâmetros.
+    - Avaliação do modelo com métricas como MAE, RMSE, MAPE.
+
+- Salvamento e Exportação do Modelo:
+    - O modelo treinado é salvo em formato .h5 para uso posterior em inferência.
+
+- Deploy do Modelo:
+    - API RESTful desenvolvida em FastAPI.
+    - Permite ao usuário informar o código da ação e o número de dias para previsão.
+
+- Escalabilidade e Monitoramento:
+    - Estrutura pronta para deploy em Docker.
+    - Sugestão de uso de ferramentas como Prometheus, Grafana ou New Relic para monitoramento (ver seção Monitoramento e Escalabilidade).
+
 
 ## 🚀 Como executar
 
@@ -61,10 +112,13 @@ curl -X POST "http://localhost:8000/predict" \
   -d '{"stock": "MSFT", "days_ahead": 10}'
   ```
 
-## ⚠️ Observações
-- O campo `stock` aceita qualquer código de ação suportado pelo Yahoo Finance.
-- Se o código informado não existir, a API retornará erro.
-- O limite de dias para previsão é de 1 a 30.
+## Monitoramento e Escalabilidade
+
+- Monitoramento:
+    Recomenda-se o uso de ferramentas como Prometheus, Grafana ou New Relic para monitorar tempo de resposta e uso de recursos da API.
+
+- Escalabilidade:
+    O projeto pode ser facilmente containerizado com Docker para deploy em nuvem ou clusters.
 
 ## 📚 Documentação automática
 Acesse http://localhost:8000/docs para testar a API de forma interativa via Swagger UI.
