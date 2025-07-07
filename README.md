@@ -13,17 +13,17 @@ Sistema completo de predição de preços de ações utilizando redes neurais LS
 
 ## 📋 Sumário
 
-- [📈 Características Principais](#caracteristicas-principais)
-- [🔧 Tecnologias](#tecnologias)
-- [🏗️ Arquitetura](#arquitetura)
-- [📦 Instalação](#instalacao)
-- [🎯 Como Usar](#como-usar)
-- [📊 Modelo e Dados](#modelo-e-dados)
-- [📈 Monitoramento](#monitoramento)
-- [📚 Documentação](#documentacao)
+- [🚀 Características Principais](#-características-principais)
+- [🔧 Tecnologias](#-tecnologias)
+- [🏗️ Arquitetura](#️-arquitetura)
+- [📦 Instalação](#-instalação)
+- [🎯 Como Usar](#-como-usar)
+- [📊 Modelo e Dados](#-modelo-e-dados)
+- [📈 Monitoramento](#-monitoramento)
+- [📚 Documentação](#-documentação)
+- [👥 Créditos](#-créditos)
 
-
-## Características Principais
+## 🚀 Características Principais
 
 - **Deep Learning**: Modelo LSTM para capturar padrões temporais complexos
 - **API RESTful**: Interface FastAPI para integração e consumo
@@ -90,7 +90,7 @@ python scripts/main.py
 }
 ```
 
-- `stock`: Código da ação (ex: "MSFT", "AAPL", "PETR4.SA")
+- `stock`: Código da ação (ex: "AAPL", "MSFT", "PETR4.SA")
 - `days_ahead`: Número de dias úteis para prever (1 a 22)
 
 #### Resposta
