@@ -38,8 +38,8 @@ async def predict_prices(request: PredictRequest):
             "stock": stock,
             "predictions": predictions,
             "dates": dates,
-            "prediction_days": days,
-            "max_prediction_days": MAX_PREDICTION_DAYS
+            #"prediction_days": days,
+            #"max_prediction_days": MAX_PREDICTION_DAYS
         }
 
     except Exception as e:

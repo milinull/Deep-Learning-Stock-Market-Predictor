@@ -1,4 +1,5 @@
 import numpy as np
+from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential, load_model  # type: ignore
 from tensorflow.keras.layers import LSTM, Dense             # type: ignore
@@ -132,13 +133,25 @@ class LSTMModel:
         """Salva o modelo treinado"""
         if self.model is None:
             raise ValueError("Modelo não foi treinado ainda.")
-        self.model.save(filename)
-        print(f"Modelo salvo como {filename}")
+        
+        base_dir = Path(__file__).resolve().parent.parent  # sobe um nível acima de scripts/
+        model_dir = base_dir / 'model'
+        model_dir.mkdir(exist_ok=True)
+        
+        save_path = model_dir / filename
+        self.model.save(str(save_path))
+        print(f"Modelo salvo em {save_path}")
 
 '''    def load_model(self, filename='lstm_model.h5'):
         """Carrega um modelo salvo"""
-        self.model = load_model(filename)
-        print(f"Modelo {filename} carregado com sucesso.")
+        base_dir = Path(__file__).resolve().parent.parent  # sobe um nível
+        model_path = base_dir / 'model' / filename
+
+        if not model_path.exists():
+            raise FileNotFoundError(f"Modelo não encontrado em {model_path}")
+
+        self.model = load_model(str(model_path))
+        print(f"Modelo {model_path.name} carregado com sucesso.")
 '''
 
 class StockPredictor:
@@ -185,8 +198,8 @@ class StockPredictor:
             'Previsao_Close': future_predictions
         })
 
-        print(f"\nPrevisões para os próximos {self.forecast_days} dias úteis:")
-        print(future_df.to_string(index=False))
+        #print(f"\nPrevisões para os próximos {self.forecast_days} dias úteis:")
+        #print(future_df.to_string(index=False))
 
         return future_df, test_predictions, y_test
 
