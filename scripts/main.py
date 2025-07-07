@@ -1,8 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
-import numpy as np
 from .DL_stock_class import StockPredictor  
 
 app = FastAPI(
@@ -12,7 +9,7 @@ app = FastAPI(
 )
 
 # Configurações
-MAX_PREDICTION_DAYS = 30  # Limite máximo de dias para previsão
+MAX_PREDICTION_DAYS = 22  # Limite máximo de dias para previsão
 
 class PredictRequest(BaseModel):
     stock: str  # Agora obrigatório, sem valor default
@@ -31,11 +28,12 @@ async def predict_prices(request: PredictRequest):
                 detail=f"O número de dias para previsão deve estar entre 1 e {MAX_PREDICTION_DAYS}"
             )
 
-        predictor = StockPredictor(stock=stock)
+        predictor = StockPredictor(stock=stock, forecast_days=days)
         future_df, _, _ = predictor.run_prediction()
 
-        predictions = [round(float(p), 2) for p in future_df['Previsao_Close']][:days]
-        dates = [str(d) for d in future_df['Data']][:days]
+        predictions = [round(float(p), 2) for p in future_df['Previsao_Close']]
+        dates = [str(d) for d in future_df['Data']]
+
         return {
             "stock": stock,
             "predictions": predictions,
