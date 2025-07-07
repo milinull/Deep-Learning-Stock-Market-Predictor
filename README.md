@@ -13,14 +13,17 @@ Sistema completo de predição de preços de ações utilizando redes neurais LS
 
 ## 📋 Sumário
 
-- [Características Principais](#características-principais)
-- [Tecnologias](#tecnologias)
-- [Arquitetura](#arquitetura)
-- [Instalação](#instalação)
-- [Como Usar](#como-usar)
-- [Modelo e Dados](#modelo-e-dados)
-- [Monitoramento](#monitoramento)
-- [Documentação](#documentação)
+## 📋 Sumário
+
+- [🚀 Características Principais](#🚀-características-principais)
+- [🔧 Tecnologias](#🔧-tecnologias)
+- [🏗️ Arquitetura](#🏗️-arquitetura)
+- [📦 Instalação](#📦-instalação)
+- [🎯 Como Usar](#🎯-como-usar)
+- [📊 Modelo e Dados](#📊-modelo-e-dados)
+- [📈 Monitoramento](#📈-monitoramento)
+- [📚 Documentação](#📚-documentação)
+
 
 ## 🚀 Características Principais
 
@@ -55,7 +58,7 @@ Sistema completo de predição de preços de ações utilizando redes neurais LS
 1. **Clone o repositório**
 ```bash
 git clone https://github.com/milinull/Deep-Learning-Stock-Market-Predictor.git
-cd stock-prediction-lstm
+cd Deep-Learning-Stock-Market-Predictor
 ```
 
 2. **Crie ambiente virtual e instale dependências**
