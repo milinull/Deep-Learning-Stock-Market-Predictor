@@ -1,3 +1,5 @@
+# dl_stock_class.py
+
 import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler

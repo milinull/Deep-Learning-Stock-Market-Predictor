@@ -1,124 +1,164 @@
-# 📈 API de Previsão de Ações com Deep Learning (LSTM)
+# 📈 Stock Price Prediction with LSTM
 
-Este projeto implementa um modelo preditivo utilizando redes neurais LSTM para prever o valor de fechamento de ações da bolsa, com deploy em uma API RESTful desenvolvida em FastAPI.
+> **MLOps Pipeline para Previsão de Preços de Ações usando Deep Learning**
 
----
+Sistema completo de predição de preços de ações utilizando redes neurais LSTM (Long Short-Term Memory) com API RESTful para deployment em produção.
 
-## 📝 Sumário
+![TensorFlow](https://img.shields.io/badge/DL-TensorFlow-FF6F00)
+![FastAPI](https://img.shields.io/badge/API-FastAPI-009688)
+![Python](https://img.shields.io/badge/Language-Python-3776AB)
+![LSTM](https://img.shields.io/badge/Model-LSTM-FF6B6B)
+![Yahoo Finance](https://img.shields.io/badge/Data-Yahoo%20Finance-720E9E)
+![MLOps](https://img.shields.io/badge/MLOps-Pipeline-4CAF50)
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Requisitos Atendidos](#requisitos-atendidos)
-- [Como Executar](#como-executar)
-- [Exemplo de Uso da API](#exemplo-de-uso-da-api)
-- [Monitoramento e Escalabilidade](#monitoramento-e-escalabilidade)
-- [Documentação Automática](#documentação-automática)
-- [Extras](#extras)
+## 📋 Sumário
 
----
+- [Características Principais](#características-principais)
+- [Tecnologias](#tecnologias)
+- [Arquitetura](#arquitetura)
+- [Instalação](#instalação)
+- [Como Usar](#como-usar)
+- [Modelo e Dados](#modelo-e-dados)
+- [Monitoramento](#monitoramento)
+- [Documentação](#documentação)
 
-## Sobre o Projeto
+## 🚀 Características Principais
 
-Este projeto faz parte do Tech Challenge da Fase 4 e engloba:
+- **Deep Learning**: Modelo LSTM para capturar padrões temporais complexos
+- **API RESTful**: Interface FastAPI para integração e consumo
+- **Dados Reais**: Integração com Yahoo Finance para dados históricos atualizados
+- **MLOps Ready**: Pipeline completo de treinamento, validação e deployment
+- **Análise Visual**: Notebooks para visualização de resultados e métricas
 
-- Coleta de dados históricos de ações via Yahoo Finance (`yfinance`)
-- Pré-processamento dos dados para uso em redes neurais
-- Construção, treinamento e avaliação de um modelo LSTM para séries temporais financeiras
-- Salvamento do modelo treinado para inferência
-- Deploy do modelo em uma API RESTful (FastAPI)
-- Documentação e exemplos de uso
+## 🔧 Tecnologias
 
----
+- **Deep Learning**: TensorFlow/Keras, LSTM
+- **API**: FastAPI, Uvicorn
+- **Dados**: yfinance, pandas, numpy, scikit-learn
+- **Visualização**: matplotlib, jupyter
 
-## Requisitos Atendidos
+## 🏗️ Arquitetura
 
-- **Coleta e Pré-processamento dos Dados:**  
-  Utiliza a biblioteca `yfinance` para baixar dados históricos de qualquer ação suportada pelo Yahoo Finance.  
-  Exemplo:
-  ```python
-  import yfinance as yf
-  df = yf.download('MSFT', start='2018-01-01', end='2024-07-20')
+```
+📁 Deep-Learning-Stock-Market-Predictor/
+├── 📁 scripts/
+│   ├── 📄 DL_stock_class.py    # Classes principais do modelo LSTM  
+│   ├── 📄 main.py              # API FastAPI
+│   ├── 📄 graphics.ipynb       # Análise visual e métricas
+├── 📁 model/                   # Modelos treinados salvos
+│   ├── 📄 lstm_model.h5
+└── 📄 requirements.txt         # Dependências
+```
 
-- Desenvolvimento do Modelo LSTM:
-    - Implementação de rede neural LSTM para previsão de séries temporais.
-    - Treinamento e ajuste de hiperparâmetros.
-    - Avaliação do modelo com métricas como MAE, RMSE, MAPE.
+## 📦 Instalação
 
-- Salvamento e Exportação do Modelo:
-    - O modelo treinado é salvo em formato .h5 para uso posterior em inferência.
+1. **Clone o repositório**
+```bash
+git clone https://github.com/milinull/Deep-Learning-Stock-Market-Predictor.git
+cd stock-prediction-lstm
+```
 
-- Deploy do Modelo:
-    - API RESTful desenvolvida em FastAPI.
-    - Permite ao usuário informar o código da ação e o número de dias para previsão.
+2. **Crie ambiente virtual e instale dependências**
+```bash
+python -m venv venv
+venv\Scripts\activate     # Windows
+source venv/bin/activate  # Linux/Mac
+```
 
-- Escalabilidade e Monitoramento:
-    - Estrutura pronta para deploy em Docker.
-    - Sugestão de uso de ferramentas como Prometheus, Grafana ou New Relic para monitoramento (ver seção Monitoramento e Escalabilidade).
-
-
-## 🚀 Como executar
-
-1. Instale as dependências:
+3. **Instale dependências**
 ```bash
 pip install -r requirements.txt
 ```
-2. Execute a API:
+
+4. **Execute a API**
 ```bash
-uvicorn scripts.main:app --reload
+python scripts/main.py
 ```
-3. Acesse a documentação interativa:
-http://localhost:8000/docs
 
-## 🛣️ Endpoints
+## 🎯 Como Usar
 
-`POST /predict`
-Realiza a previsão dos preços de fechamento de uma ação para os próximos dias úteis.
+### API Endpoint
 
-### Request Body
-```bash
+**`POST /predict`** - Realiza previsão de preços para os próximos dias úteis
+
+#### Requisição
+```json
 {
   "stock": "MSFT",
   "days_ahead": 10
 }
 ```
 
-- `stock` (string, obrigatório): Código da ação (ex: `"MSFT"`, `"AAPL"`, `"PETR4.SA"`).
-- `days_ahead` (int, obrigatório): Número de dias úteis para prever (1 a 30).
+- `stock`: Código da ação (ex: "MSFT", "AAPL", "PETR4.SA")
+- `days_ahead`: Número de dias úteis para prever (1 a 22)
 
-### Exemplo de resposta
-```bash
+#### Resposta
+```json
 {
   "stock": "MSFT",
   "predictions": [495.86, 495.12, ...],
-  "dates": ["2025-06-30", "2025-07-01", ...],
-  "prediction_days": 10,
-  "max_prediction_days": 30
+  "dates": ["2025-06-30", "2025-07-01", ...]
 }
 ```
 
-- `predictions`: Lista dos valores previstos para fechamento.
-- `dates`: Datas correspondentes às previsões.
-- `prediction_days`: Dias solicitados na previsão.
-- `max_prediction_days`: Limite máximo permitido (30).
-
-### Códigos de resposta
-- `200 OK`: Previsão realizada com sucesso.
-- `400 Bad Request`: Parâmetros inválidos (ex: dias fora do limite).
-- `500 Internal Server Error`: Erro interno ao processar a previsão.
-
-## 🧪 Testando via curl
+### Exemplo com curl
 ```bash
 curl -X POST "http://localhost:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{"stock": "MSFT", "days_ahead": 10}'
-  ```
+```
 
-## Monitoramento e Escalabilidade
+## 📊 Modelo e Dados
 
-- Monitoramento:
-    Recomenda-se o uso de ferramentas como Prometheus, Grafana ou New Relic para monitorar tempo de resposta e uso de recursos da API.
+### Coleta e Pré-processamento
+- Integração com Yahoo Finance via `yfinance`
+- Normalização automática com `MinMaxScaler` (0-1)
+- Criação de sequências temporais para LSTM
 
-- Escalabilidade:
-    O projeto pode ser facilmente containerizado com Docker para deploy em nuvem ou clusters.
+```python
+from DL_stock_class import StockData
 
-## 📚 Documentação automática
-Acesse http://localhost:8000/docs para testar a API de forma interativa via Swagger UI.
+data_manager = StockData('MSFT', period='24mo')
+scaled_data, scaler, raw_data = data_manager.download_and_prepare_data()
+```
+
+### Arquitetura LSTM
+- 2 camadas LSTM (50 unidades) + 2 camadas Dense
+- Otimização: Adam optimizer com loss MSE
+- Janela temporal: 22 dias, 100 épocas
+- Métricas: MAE, MSE, RMSE
+
+```python
+model = Sequential([
+    LSTM(50, return_sequences=True, input_shape=(time_step, 1)),
+    LSTM(50, return_sequences=False),
+    Dense(25),
+    Dense(1)
+])
+```
+
+## 📈 Monitoramento
+
+- **Métricas**: MAE, MSE, RMSE para avaliação de performance
+- **Visualização**: Gráficos de comparação e análise de erros
+- **Logging**: Rastreamento de treinamento e predições
+- **Versionamento**: Modelos salvos em formato .h5
+
+### Preparado para Escalabilidade
+- 🐳 Docker para containerização
+- 📊 Prometheus/Grafana para monitoramento
+- ☁️ Cloud services (AWS/GCP/Azure)
+- 🔄 CI/CD pipelines
+
+## 📚 Documentação
+
+Acesse `http://localhost:8000/docs` para testar a API interativamente via Swagger UI.
+
+## 👥 Créditos
+
+Desenvolvido por:
+- **Raphael Nakamura** - 💻 [GitHub](https://github.com/milinull) | 💼 [LinkedIn](https://www.linkedin.com/in/raphael-nakamura017/)
+
+- **Lucas Lopes** - 💻 [GitHub](/) | 💼 [LinkedIn](https://www.linkedin.com/in/lucas-lopes-633b04123/)
+
+---
