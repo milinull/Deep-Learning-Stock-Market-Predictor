@@ -13,17 +13,17 @@ Sistema completo de predição de preços de ações utilizando redes neurais LS
 
 ## 📋 Sumário
 
-- [Características Principais](#características-principais)
-- [Tecnologias](#tecnologias)
-- [Arquitetura](#arquitetura)
-- [Instalação](#instalação)
-- [Como Usar](#como-usar)
-- [Modelo e Dados](#modelo-e-dados)
-- [Monitoramento](#monitoramento)
-- [Documentação](#documentação)
+- [📈 Características Principais](#caracteristicas-principais)
+- [🔧 Tecnologias](#tecnologias)
+- [🏗️ Arquitetura](#arquitetura)
+- [📦 Instalação](#instalacao)
+- [🎯 Como Usar](#como-usar)
+- [📊 Modelo e Dados](#modelo-e-dados)
+- [📈 Monitoramento](#monitoramento)
+- [📚 Documentação](#documentacao)
 
 
-## 🚀 Características Principais
+## Características Principais
 
 - **Deep Learning**: Modelo LSTM para capturar padrões temporais complexos
 - **API RESTful**: Interface FastAPI para integração e consumo
