@@ -13,16 +13,14 @@ Sistema completo de predição de preços de ações utilizando redes neurais LS
 
 ## 📋 Sumário
 
-## 📋 Sumário
-
-- [🚀 Características Principais](#🚀-características-principais)
-- [🔧 Tecnologias](#🔧-tecnologias)
-- [🏗️ Arquitetura](#🏗️-arquitetura)
-- [📦 Instalação](#📦-instalação)
-- [🎯 Como Usar](#🎯-como-usar)
-- [📊 Modelo e Dados](#📊-modelo-e-dados)
-- [📈 Monitoramento](#📈-monitoramento)
-- [📚 Documentação](#📚-documentação)
+- [Características Principais](#características-principais)
+- [Tecnologias](#tecnologias)
+- [Arquitetura](#arquitetura)
+- [Instalação](#instalação)
+- [Como Usar](#como-usar)
+- [Modelo e Dados](#modelo-e-dados)
+- [Monitoramento](#monitoramento)
+- [Documentação](#documentação)
 
 
 ## 🚀 Características Principais
