@@ -160,6 +160,6 @@ Acesse `http://localhost:8000/docs` para testar a API interativamente via Swagge
 Desenvolvido por:
 - **Raphael Nakamura** - 💻 [GitHub](https://github.com/milinull) | 💼 [LinkedIn](https://www.linkedin.com/in/raphael-nakamura017/)
 
-- **Lucas Lopes** - 💻 [GitHub](/) | 💼 [LinkedIn](https://www.linkedin.com/in/lucas-lopes-633b04123/)
+- **Lucas Lopes** - 💻 [GitHub](https://github.com/Lopeslucas) | 💼 [LinkedIn](https://www.linkedin.com/in/lucas-lopes-633b04123/)
 
 ---
