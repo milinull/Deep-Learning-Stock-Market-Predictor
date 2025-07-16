@@ -1,10 +1,16 @@
 # dl_stock_class.py
+import os
+
+# IMPORTANTE: Definir ANTES de importar TensorFlow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Remove logs INFO e WARNING
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Desabilita oneDNN
 
 import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
+from tensorflow import keras
 from tensorflow.keras.models import Sequential, load_model  # type: ignore
-from tensorflow.keras.layers import LSTM, Dense             # type: ignore
+from tensorflow.keras.layers import LSTM, Dense, Input      # type: ignore
 import yfinance as yf
 import pandas as pd
 from datetime import timedelta
@@ -19,8 +25,9 @@ class StockData:
 
     def download_and_prepare_data(self):
         """Download e prepara os dados para o modelo"""
-        print(f"Baixando dados da {self.stock}...")
-        self.raw_data = yf.download([self.stock], period=self.period)
+        print(f"📊 Baixando dados históricos da {self.stock} ({self.period})")
+        self.raw_data = yf.download([self.stock], period=self.period, auto_adjust=True, progress=False)
+        print(f"✅ Dados baixados: {len(self.raw_data)} registros")
         self.scaled_data, self.scaler = self._load_data_from_df(self.raw_data)
         return self.scaled_data, self.scaler, self.raw_data
 
@@ -71,6 +78,7 @@ class LSTMModel:
 
     def prepare_train_test_data(self, data, stock_data_manager):
         """Prepara dados de treino e teste"""
+        print(f"🔄 Preparando dados para treinamento (80%) e teste (20%)")
         train_size = int(len(data) * 0.8)
         train_data = data[0:train_size, :]
         test_data = data[train_size - self.time_step:, :]
@@ -81,34 +89,40 @@ class LSTMModel:
         # Reshape para LSTM
         self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], self.x_train.shape[1], 1))
         self.x_test = np.reshape(self.x_test, (self.x_test.shape[0], self.x_test.shape[1], 1))
+        
+        print(f"   → Dados de treino: {self.x_train.shape[0]} sequências")
+        print(f"   → Dados de teste: {self.x_test.shape[0]} sequências")
 
     def build_model(self):
         """Constrói o modelo LSTM"""
-        print("Construindo modelo LSTM...")
+        print("🧠 Construindo modelo LSTM")
         self.model = Sequential()
-        self.model.add(LSTM(units=50, return_sequences=True, input_shape=(self.time_step, 1)))
+        self.model.add(Input(shape=(self.time_step, 1)))  # Camada de entrada explícita
+        self.model.add(LSTM(units=50, return_sequences=True))
         self.model.add(LSTM(units=50, return_sequences=False))
         self.model.add(Dense(units=25))
         self.model.add(Dense(units=1))
         
         self.model.compile(optimizer='adam', loss='mean_squared_error')
+        print("✅ Modelo construído com sucesso!")
 
     def train_model(self):
         """Treina o modelo"""
         if self.model is None:
             raise ValueError("Modelo não foi construído. Chame build_model() primeiro.")
         
-        print("Treinando modelo...")
+        print(f"🚀 Iniciando treinamento ({self.epochs} épocas)\n")
         self.history = self.model.fit(
             self.x_train, self.y_train, 
             epochs=self.epochs, 
             batch_size=self.batch_size, 
             verbose=1
         )
+        print("\n✅ Treinamento concluído!")
 
     def predict_test_data(self, scaler):
         """Faz previsões no conjunto de teste"""
-        print("Fazendo previsões no conjunto de teste...")
+        print("🔮 Fazendo previsões no conjunto de teste")
         test_predictions = self.model.predict(self.x_test)
         test_predictions = scaler.inverse_transform(test_predictions)
         y_test_rescaled = scaler.inverse_transform(self.y_test.reshape(-1, 1))
@@ -117,6 +131,7 @@ class LSTMModel:
 
     def predict_future(self, scaler, last_sequence, days_ahead=22):
         """Faz previsões futuras"""
+        print(f"🔮 Gerando previsões para os próximos {days_ahead} dias úteis")
         predictions = []
         current_sequence = last_sequence.copy()
         
@@ -131,7 +146,7 @@ class LSTMModel:
         
         return predictions.flatten()
     
-    def save_model(self, filename='lstm_model.h5'):
+    def save_model(self, filename='lstm_model.keras'):
         """Salva o modelo treinado"""
         if self.model is None:
             raise ValueError("Modelo não foi treinado ainda.")
@@ -142,9 +157,9 @@ class LSTMModel:
         
         save_path = model_dir / filename
         self.model.save(str(save_path))
-        print(f"Modelo salvo em {save_path}")
+        print(f"💾 Modelo salvo em: {save_path}")
 
-'''    def load_model(self, filename='lstm_model.h5'):
+'''    def load_model(self, filename='lstm_model.keras'):
         """Carrega um modelo salvo"""
         base_dir = Path(__file__).resolve().parent.parent  # sobe um nível
         model_path = base_dir / 'model' / filename
@@ -169,6 +184,10 @@ class StockPredictor:
 
     def run_prediction(self):
         """Executa todo o pipeline de previsão"""
+        print("=" * 60)
+        print("🎯 INICIANDO PREDIÇÃO DE AÇÕES COM LSTM")
+        print("=" * 60)
+
         # 1. Preparar dados
         self.scaled_data, self.scaler, self.raw_data = self.stock_data.download_and_prepare_data()
 
@@ -180,7 +199,7 @@ class StockPredictor:
         self.lstm_model.train_model()
 
         # 4. Salvar o modelo treinado
-        self.lstm_model.save_model('lstm_model.h5')
+        self.lstm_model.save_model('lstm_model.keras')
 
         # 5. Fazer previsões no teste
         test_predictions, y_test = self.lstm_model.predict_test_data(self.scaler)
@@ -200,8 +219,9 @@ class StockPredictor:
             'Previsao_Close': future_predictions
         })
 
-        #print(f"\nPrevisões para os próximos {self.forecast_days} dias úteis:")
-        #print(future_df.to_string(index=False))
+        print("=" * 60)
+        print("✅ PREDIÇÃO CONCLUÍDA COM SUCESSO!")
+        print("=" * 60)
 
         return future_df, test_predictions, y_test
 
