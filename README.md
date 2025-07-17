@@ -46,8 +46,9 @@ Sistema completo de predição de preços de ações utilizando redes neurais LS
 │   ├── 📄 DL_stock_class.py    # Classes principais do modelo LSTM  
 │   ├── 📄 main.py              # API FastAPI
 │   ├── 📄 graphics.ipynb       # Análise visual e métricas
+│   ├── 📄 monitoring.py        # Monitoramento de recursos do sistema
 ├── 📁 model/                   # Modelos treinados salvos
-│   ├── 📄 lstm_model.h5
+│   ├── 📄 lstm_model.keras
 └── 📄 requirements.txt         # Dependências
 ```
 
