@@ -144,7 +144,7 @@ model = Sequential([
 - **Métricas**: MAE, MSE, RMSE para avaliação de performance
 - **Visualização**: Gráficos de comparação e análise de erros
 - **Logging**: Rastreamento de treinamento e predições
-- **Versionamento**: Modelos salvos em formato .h5
+- **Versionamento**: Modelos salvos em formato .keras
 
 ### Preparado para Escalabilidade
 - 🐳 Docker para containerização
