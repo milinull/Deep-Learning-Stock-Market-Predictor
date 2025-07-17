@@ -1,9 +1,8 @@
 # dl_stock_class.py
 import os
 
-# IMPORTANTE: Definir ANTES de importar TensorFlow
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Remove logs INFO e WARNING
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Desabilita oneDNN
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'    # Remove logs INFO e WARNING
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'   # Desabilita oneDNN
 
 import numpy as np
 from pathlib import Path
@@ -16,6 +15,8 @@ import pandas as pd
 from datetime import timedelta
 
 class StockData:
+    """Classe responsável por baixar, preparar e normalizar os dados históricos de uma ação."""
+
     def __init__(self, stock='MSFT', period='24mo'):
         self.stock = stock
         self.period = period
@@ -24,15 +25,22 @@ class StockData:
         self.scaler = None
 
     def download_and_prepare_data(self):
-        """Download e prepara os dados para o modelo"""
+        """Baixa os dados históricos da ação via Yahoo Finance, filtra a coluna 'Close' e aplica normalização.
+        Também armazena os dados crus e normalizados internamente para uso posterior no pipeline.
+        """
+
         print(f"📊 Baixando dados históricos da {self.stock} ({self.period})")
         self.raw_data = yf.download([self.stock], period=self.period, auto_adjust=True, progress=False)
         print(f"✅ Dados baixados: {len(self.raw_data)} registros")
+
         self.scaled_data, self.scaler = self._load_data_from_df(self.raw_data)
         return self.scaled_data, self.scaler, self.raw_data
 
     def _load_data_from_df(self, df):
-        """Processa o DataFrame e normaliza os dados"""
+        """Filtra a coluna de preços de fechamento do DataFrame e aplica normalização Min-Max.
+        Esta função interna assume que a coluna 'Close' está presente e transforma os dados em escala entre 0 e 1.
+        """
+
         if 'Close' not in df.columns:
             raise ValueError("Coluna 'Close' não encontrada no DataFrame.")
 
@@ -43,7 +51,10 @@ class StockData:
         return scaled_data, scaler
     
     def create_dataset(self, data, time_step):
-        """Cria dataset para treinamento/teste"""
+        """Gera pares de sequência e valor alvo com base em uma janela deslizante de tempo.
+        Usado para preparar os dados no formato necessário para treinar um modelo LSTM.
+        """
+
         x, y = [], []
         for i in range(len(data) - time_step - 1):
             x.append(data[i:(i + time_step), 0])
@@ -51,7 +62,10 @@ class StockData:
         return np.array(x), np.array(y)
     
     def create_future_dates(self, last_date, days_ahead=22):
-        """Cria datas futuras considerando apenas dias úteis"""
+        """Gera uma lista de datas futuras considerando apenas dias úteis (segunda a sexta).
+        Ideal para criar datas correspondentes às previsões futuras, ignorando fins de semana.
+        """
+
         future_dates = []
         current_date = last_date + timedelta(days=1)
         
@@ -63,6 +77,8 @@ class StockData:
         return future_dates
 
 class LSTMModel:
+    """Classe que encapsula o modelo LSTM, incluindo sua construção, treinamento e geração de previsões."""
+
     def __init__(self, time_step=22, epochs=100, batch_size=32):
         self.time_step = time_step
         self.epochs = epochs
@@ -77,7 +93,10 @@ class LSTMModel:
         self.y_test = None
 
     def prepare_train_test_data(self, data, stock_data_manager):
-        """Prepara dados de treino e teste"""
+        """Divide os dados em conjuntos de treino e teste, criando sequências compatíveis com a entrada do LSTM.
+        Também faz o reshape necessário para alimentar as camadas LSTM tridimensionais.
+        """
+
         print(f"🔄 Preparando dados para treinamento (80%) e teste (20%)")
         train_size = int(len(data) * 0.8)
         train_data = data[0:train_size, :]
@@ -94,7 +113,10 @@ class LSTMModel:
         print(f"   → Dados de teste: {self.x_test.shape[0]} sequências")
 
     def build_model(self):
-        """Constrói o modelo LSTM"""
+        """Constrói um modelo sequencial com camadas LSTM e Dense.
+        A arquitetura inclui duas camadas LSTM empilhadas, uma camada intermediária densa e uma saída para previsão de um único valor.
+        """
+
         print("🧠 Construindo modelo LSTM")
         self.model = Sequential()
         self.model.add(Input(shape=(self.time_step, 1)))  # Camada de entrada explícita
@@ -121,7 +143,10 @@ class LSTMModel:
         print("\n✅ Treinamento concluído!")
 
     def predict_test_data(self, scaler):
-        """Faz previsões no conjunto de teste"""
+        """Realiza previsões usando os dados de teste e reverte a normalização dos resultados.
+        Compara os valores previstos com os reais, permitindo avaliação da performance do modelo.
+        """
+
         print("🔮 Fazendo previsões no conjunto de teste")
         test_predictions = self.model.predict(self.x_test)
         test_predictions = scaler.inverse_transform(test_predictions)
@@ -130,7 +155,10 @@ class LSTMModel:
         return test_predictions, y_test_rescaled
 
     def predict_future(self, scaler, last_sequence, days_ahead=22):
-        """Faz previsões futuras"""
+        """Gera previsões para os próximos dias úteis com base na última sequência disponível.
+        A cada passo, a previsão é usada como entrada para o próximo, simulando a evolução da série no futuro.
+        """
+
         print(f"🔮 Gerando previsões para os próximos {days_ahead} dias úteis")
         predictions = []
         current_sequence = last_sequence.copy()
@@ -148,6 +176,7 @@ class LSTMModel:
     
     def save_model(self, filename='lstm_model.keras'):
         """Salva o modelo treinado"""
+
         if self.model is None:
             raise ValueError("Modelo não foi treinado ainda.")
         
@@ -172,6 +201,8 @@ class LSTMModel:
 '''
 
 class StockPredictor:
+    """Pipeline completo para previsão de ações com LSTM, desde o download até a geração de previsões futuras."""
+
     def __init__(self, stock='MSFT', period='24mo', forecast_days=22):
         self.stock_data = StockData(stock, period)
         self.lstm_model = LSTMModel()
@@ -183,7 +214,13 @@ class StockPredictor:
         self.raw_data = None
 
     def run_prediction(self):
-        """Executa todo o pipeline de previsão"""
+        """Executa todo o fluxo de previsão de ações utilizando LSTM.
+
+        Engloba desde o download e normalização dos dados, treinamento do modelo, 
+        salvamento, previsões no conjunto de teste e projeção de preços futuros. 
+        Ao final, retorna as previsões futuras juntamente com os dados reais e previstos de teste.
+        """
+
         print("=" * 60)
         print("🎯 INICIANDO PREDIÇÃO DE AÇÕES COM LSTM")
         print("=" * 60)
