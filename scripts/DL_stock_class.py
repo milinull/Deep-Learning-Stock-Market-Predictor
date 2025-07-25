@@ -33,10 +33,10 @@ class StockData:
         self.raw_data = yf.download([self.stock], period=self.period, auto_adjust=True, progress=False)
         print(f"✅ Dados baixados: {len(self.raw_data)} registros")
 
-        self.scaled_data, self.scaler = self._load_data_from_df(self.raw_data)
+        self.scaled_data, self.scaler = self.load_data_from_df(self.raw_data)
         return self.scaled_data, self.scaler, self.raw_data
 
-    def _load_data_from_df(self, df):
+    def load_data_from_df(self, df):
         """Filtra a coluna de preços de fechamento do DataFrame e aplica normalização Min-Max.
         Esta função interna assume que a coluna 'Close' está presente e transforma os dados em escala entre 0 e 1.
         """
